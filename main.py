@@ -64,20 +64,20 @@ class Merge:
 
     def create_tree_of_dir(self, pth: str = '.'):
         """
-        создаём дерево каталогов
+        создаём дерево каталогов попутно заменяя пробелы
         """
         if not pth in self.tree_of_dir:
             self.tree_of_dir.append(pth)
-        for dr in os.listdir(path=pth):
-            pth_dr = '\\'.join([pth, dr])
-            new_pth = self.change_spaces(pth_dr)
-            if os.path.isdir(pth_dr):
-                self.tree_of_dir.append(new_pth)
+        for item in os.listdir(path=pth):
+            pth_item = '\\'.join([pth, item])
+            # new_pth = self.change_spaces(pth_item)
+            new_pth = self.change_underline(pth_item)
+            if os.path.isdir(new_pth):
                 self.create_tree_of_dir(new_pth)
 
     def check_dir(self, pth):
         """
-        перебираем содержимое каталогов
+        перебираем содержимое каталогов и записываем пути к файлам
         """
         for each in os.listdir(path=pth):
             type = str(mimetypes.guess_type(each))
@@ -113,7 +113,6 @@ class Merge:
                 print(f"{each.get('codec_name')}"
                       f" {each.get('codec_type')}"
                       f" {each.get('tags', '')}")
-        codec_type = k['streams'][0]['codec_type']
         return k
 
         # go = {}
