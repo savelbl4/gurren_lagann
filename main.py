@@ -23,17 +23,16 @@ class Merge:
     def __init__(self, title_dir: str = 'E:\\Videos\\anime\\[Kawaiika-Raws] (2020) Ishuzoku Reviewers [BDRip 1920x1080 HEVC FLAC]'):
         self.home_dir = os.getcwd()
         self.tree_of_dir = []
+        self.files = []
         self.change_dir(title_dir)
-        self.create_tree_of_dir()
-        self.list_ = {
-            'files': [],
-            'video': [],
-            'audio': [],
-            'subtitle': [],
-            'hh': {},
+        self.create_tree()
+        self.check_dir()
+        self.list_on_merge = {
+            # 'video': [],
+            # 'audio': [],
+            # 'subtitle': [],
+            # 'hh': {},
         }
-        for each in self.tree_of_dir:
-            self.check_dir(each)
         self.create_key()
         # self.go = self.create_key()
 
@@ -62,7 +61,7 @@ class Merge:
         os.rename(src, dst)
         return dst
 
-    def create_tree_of_dir(self, pth: str = '.'):
+    def create_tree(self, pth: str = '.'):
         """
         создаём дерево каталогов попутно заменяя пробелы
         """
@@ -73,35 +72,41 @@ class Merge:
             # new_pth = self.change_spaces(pth_item)
             new_pth = self.change_underline(pth_item)
             if os.path.isdir(new_pth):
-                self.create_tree_of_dir(new_pth)
+                self.create_tree(new_pth)
 
-    def check_dir(self, pth):
+    def check_dir(self):
         """
         перебираем содержимое каталогов и записываем пути к файлам
         """
-        for each in os.listdir(path=pth):
-            type = str(mimetypes.guess_type(each))
-            if re.search(r'video', type) or re.search(r'audio', type):
-                self.list_['files'].append('\\'.join([pth, each]))
+        for pth in self.tree_of_dir:
+            for each in os.listdir(path=pth):
+                type = str(mimetypes.guess_type(each))
+                if re.search(r'video', type) or re.search(r'audio', type):
+                    self.files.append('\\'.join([pth, each]))
 
     def create_key(self):
         """
-        создаём ключи по названиям видео
+        создаём ключи по названиям видео в корневом каталоге
         """
-        for each in self.list_['video']:
+        for each in self.files:
             if len(each.split('\\')) == 2:
-                name = each.split('\\')[1].split('.')[0]
-                self.list_['hh'].update([(name, [])])
+                pattern = re.compile('] ([A-Za-z0-9._ ]+) \[')
+                match = pattern.search(each)
+                if match:
+                    title = match.group(1)
+                    print(title)
+                    if not self.list_on_merge.get(title):
+                        self.list_on_merge.update([(title, {})])
 
     def check_file(self, file_name, num = None) -> dict:
         """
         получить данные из файле
         """
-        command_array = ["ffprobe",
-                         "-v", "quiet",
-                         "-print_format", "json",
-                         "-show_format",
-                         "-show_streams",
+        command_array = ['ffprobe',
+                         '-v', 'quiet',
+                         '-print_format', 'json',
+                         '-show_format',
+                         '-show_streams',
                          file_name]
         result = subprocess.run(
             command_array,
