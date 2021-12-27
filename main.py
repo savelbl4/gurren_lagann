@@ -108,11 +108,10 @@ class Merge:
         """
         for each in self.files:
             if len(each.split('\\')) == 2:
-                # pattern = re.compile('] ([A-Za-z0-9._ ]+) \[')
-                pattern = re.compile('([A-Za-z0-9._\- ]+) \[')
+                pattern = re.compile('([A-Za-z0-9._\- ]+\d) [\[(]')
                 match = pattern.search(each)
                 if match:
-                    title = match.group(1)
+                    title = match.group(1).strip()
                     print(title)
                     if not self.list_on_merge.get(title):
                         self.list_on_merge.update([(title, {})])
