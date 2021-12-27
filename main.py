@@ -16,11 +16,11 @@ if not search_path:
     search_path = {
         'Linux': '~/',
         'Darwin': '~/',
-        'Windows': f'E:\\Videos\\anime\\[Kawaiika-Raws] (2020) Ishuzoku Reviewers [BDRip 1920x1080 HEVC FLAC]'
+        'Windows': f'E:\\Videos\\anime'
     }[platform.system()]
 
 class Merge:
-    def __init__(self, title_dir: str = 'E:\\Videos\\anime\\[Kawaiika-Raws] (2020) Ishuzoku Reviewers [BDRip 1920x1080 HEVC FLAC]'):
+    def __init__(self, title_dir: str):
         self.home_dir = os.getcwd()
         self.tree_of_dir = []
         self.files = []
@@ -187,4 +187,4 @@ class Merge:
 
 proj = Merge(search_path)
 
-# proj.start()
+proj.start()

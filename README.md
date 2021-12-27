@@ -1,0 +1,1 @@
+![братское слияние](http://sun9-87.userapi.com/impf/c301108/v301108337/7f32/OO8I1g5B-gU.jpg?size=604x340&quality=96&sign=6d6f307f72411e89f34f0222eca3c3df&type=album)
