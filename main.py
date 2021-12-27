@@ -27,14 +27,9 @@ class Merge:
         self.change_dir(title_dir)
         self.create_tree()
         self.check_dir()
-        self.list_on_merge = {
-            # 'video': [],
-            # 'audio': [],
-            # 'subtitle': [],
-            # 'hh': {},
-        }
+        self.list_on_merge = {}
         self.create_key()
-        # self.go = self.create_key()
+        self.build_hash()
 
     @staticmethod
     def change_dir(path):
@@ -84,20 +79,6 @@ class Merge:
                 if re.search(r'video', type) or re.search(r'audio', type):
                     self.files.append('\\'.join([pth, each]))
 
-    def create_key(self):
-        """
-        создаём ключи по названиям видео в корневом каталоге
-        """
-        for each in self.files:
-            if len(each.split('\\')) == 2:
-                pattern = re.compile('] ([A-Za-z0-9._ ]+) \[')
-                match = pattern.search(each)
-                if match:
-                    title = match.group(1)
-                    print(title)
-                    if not self.list_on_merge.get(title):
-                        self.list_on_merge.update([(title, {})])
-
     def check_file(self, file_name, num = None) -> dict:
         """
         получить данные из файле
@@ -120,16 +101,39 @@ class Merge:
                       f" {each.get('tags', '')}")
         return k
 
-        # go = {}
-        # if len(self.list['video']) == len(self.list['audio']):
-        #     for i in range(len(self.list['video'])):
-        #         video = self.change_spaces(self.list['video'][i])
-        #         audio = self.change_spaces(self.list['audio'][i])
-        #         go.update([(video, audio)])
-        # else:
-        #     print('количество файлов не совпадает')
-        #     exit(1)
-        # return go
+    def create_key(self):
+        """
+        создаём ключи по названиям видео в корневом каталоге
+        """
+        for each in self.files:
+            if len(each.split('\\')) == 2:
+                pattern = re.compile('] ([A-Za-z0-9._ ]+) \[')
+                match = pattern.search(each)
+                if match:
+                    title = match.group(1)
+                    print(title)
+                    if not self.list_on_merge.get(title):
+                        self.list_on_merge.update([(title, {})])
+
+    def build_hash(self):
+        """
+        собрали значения ключей
+        """
+        for key in self.list_on_merge.keys():
+            pattern = re.compile(key)
+            for each in self.files:
+                match = pattern.search(each)
+                if match:
+                    file = self.check_file(each).get('streams')[0]
+                    if file.get('codec_type') == 'video':
+                        self.list_on_merge[key].update([('video', each)])
+                    if file.get('codec_type') == 'audio':
+                        self.list_on_merge[key].update([('audio', each)])
+                    if file.get('codec_type') == 'subtitle':
+                        if not self.list_on_merge[key].get('subtitle'):
+                            self.list_on_merge[key].update([('subtitle', [each])])
+                        else:
+                            self.list_on_merge[key]['subtitle'].append(each)
 
     def replace_audio(self, video, audio):
         """
@@ -142,10 +146,19 @@ class Merge:
         """
         добавляет дорожку
         """
-        added = ''.join(['added_', video])
+        added = '\\added_'.join(video.split('\\'))
+        command_array = ['ffmpeg',
+                         '-v', 'quiet',
+                         '-i', video, '-i', audio,
+                         '-map', '0:v', '-map', '1:a', '-map', '0:a',
+                         '-c',
+                         # '-c:v',
+                         'copy', '-shortest',
+                         added
+                         ]
         line = f'ffmpeg -i {video} -i {audio} -map 0:v -map 1:a -map 0:a -c:v copy -shortest {added}'
-        print(line)
-        subprocess.run(line)
+        print(command_array)
+        subprocess.run(command_array)
 
     def mixing_audio(self):
         subprocess.run(
@@ -162,9 +175,15 @@ class Merge:
         ffmpeg.concat(input_video, input_audio, v=1, a=1).output(new_name).run()
 
     def start(self):
-        for key in self.go:
-            self.add_audio(key, self.go[key])
-            send2trash(key)
+        """
+        погнали слиять
+        """
+        for key in self.list_on_merge.keys():
+            self.add_audio(
+                self.list_on_merge[key]['video'],
+                self.list_on_merge[key]['audio']
+            )
+            send2trash(self.list_on_merge[key]['video'])
 
 proj = Merge(search_path)
 
