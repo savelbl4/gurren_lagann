@@ -104,10 +104,12 @@ class Merge:
     def create_key(self):
         """
         создаём ключи по названиям видео в корневом каталоге
+        TODO: регулярка не идеальна
         """
         for each in self.files:
             if len(each.split('\\')) == 2:
-                pattern = re.compile('] ([A-Za-z0-9._ ]+) \[')
+                # pattern = re.compile('] ([A-Za-z0-9._ ]+) \[')
+                pattern = re.compile('([A-Za-z0-9._\- ]+) \[')
                 match = pattern.search(each)
                 if match:
                     title = match.group(1)
