@@ -120,6 +120,7 @@ class Merge:
     def build_hash(self):
         """
         собрали значения ключей
+        TODO: стрим с видео не всегда в нулевом индексе!
         """
         for key in self.list_on_merge.keys():
             pattern = re.compile(key)
@@ -188,5 +189,4 @@ class Merge:
             send2trash(self.list_on_merge[key]['video'])
 
 proj = Merge(search_path)
-
-proj.start()
+# proj.start()
