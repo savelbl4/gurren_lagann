@@ -188,4 +188,6 @@ class Merge:
             send2trash(self.list_on_merge[key]['video'])
 
 proj = Merge(search_path)
-# proj.start()
+answer = input('\n\tну шо, start?\n\t\t\t: ').strip()
+if answer == 'start':
+    proj.start()
