@@ -30,6 +30,11 @@ class Merge:
         self.list_on_merge = {}
         self.create_key()
         self.build_hash()
+        for key in self.list_on_merge:
+            pattern = re.compile(key+'([A-Za-z0-9._\- ]+)')
+            match = pattern.search(self.list_on_merge[key]['audio'])
+            title = match.group(1).strip()
+            print(f'{key}\t{title}')
 
     @staticmethod
     def change_dir(path):
@@ -108,11 +113,10 @@ class Merge:
         """
         for each in self.files:
             if len(each.split('\\')) == 2:
-                pattern = re.compile('([A-Za-z0-9._\- ]+\d) [\[(]')
+                pattern = re.compile('([A-Za-z0-9._\- ]+\d)[. ][\[(A-Za-z]')
                 match = pattern.search(each)
                 if match:
                     title = match.group(1).strip()
-                    print(title)
                     if not self.list_on_merge.get(title):
                         self.list_on_merge.update([(title, {})])
 
@@ -120,6 +124,7 @@ class Merge:
         """
         собрали значения ключей
         TODO: стрим с видео не всегда в нулевом индексе!
+        TODO: дорожек с озвучкой может быть несколько!
         """
         for key in self.list_on_merge.keys():
             pattern = re.compile(key)
