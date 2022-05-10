@@ -8,16 +8,6 @@ import mimetypes
 # from ffprobe import FFProbe
 from send2trash import send2trash
 from pprint import pprint
-search_path = input(
-            "\nВведи путь.\nИли нажмите Enter чтобы искать в домашнем каталоге: "
-        ).strip()
-
-if not search_path:
-    search_path = {
-        'Linux': '~/',
-        'Darwin': '~/',
-        'Windows': f'E:\\Videos\\anime'
-    }[platform.system()]
 
 class Merge:
     def __init__(self, title_dir: str):
@@ -31,7 +21,7 @@ class Merge:
         self.create_key()
         self.build_hash()
         for key in self.list_on_merge:
-            pattern = re.compile(key+'([A-Za-z0-9._\- ]+)')
+            pattern = re.compile(key+'([\[\]A-Za-z0-9._\- ]+)')
             match = pattern.search(self.list_on_merge[key]['audio'])
             title = match.group(1).strip()
             print(f'{key}\t{title}')
@@ -84,7 +74,7 @@ class Merge:
                 if re.search(r'video', type) or re.search(r'audio', type):
                     self.files.append('\\'.join([pth, each]))
 
-    def check_file(self, file_name, num = None) -> dict:
+    def check_file(self, file_name, num=None) -> dict:
         """
         получить данные из файле
         """
@@ -106,6 +96,13 @@ class Merge:
                       f" {each.get('tags', '')}")
         return k
 
+    def chek_streams(self, key, each, file):
+        # print(file.get('format').get('filename'))
+        for stream in file.get('streams'):
+            if stream.get('codec_type') == 'video':
+                self.list_on_merge[key].update([('video', each)])
+                # print(stream)
+
     def create_key(self):
         """
         создаём ключи по названиям видео в корневом каталоге
@@ -113,7 +110,7 @@ class Merge:
         """
         for each in self.files:
             if len(each.split('\\')) == 2:
-                pattern = re.compile('([A-Za-z0-9._\- ]+\d)[. ][\[(A-Za-z]')
+                pattern = re.compile(r'([A-Za-z0-9._\- ]+\d)[. ][\[(A-Za-z]')
                 match = pattern.search(each)
                 if match:
                     title = match.group(1).strip()
@@ -123,7 +120,6 @@ class Merge:
     def build_hash(self):
         """
         собрали значения ключей
-        TODO: стрим с видео не всегда в нулевом индексе!
         TODO: дорожек с озвучкой может быть несколько!
         """
         for key in self.list_on_merge.keys():
@@ -131,16 +127,22 @@ class Merge:
             for each in self.files:
                 match = pattern.search(each)
                 if match:
-                    file = self.check_file(each).get('streams')[0]
-                    if file.get('codec_type') == 'video':
-                        self.list_on_merge[key].update([('video', each)])
-                    if file.get('codec_type') == 'audio':
-                        self.list_on_merge[key].update([('audio', each)])
-                    if file.get('codec_type') == 'subtitle':
-                        if not self.list_on_merge[key].get('subtitle'):
-                            self.list_on_merge[key].update([('subtitle', [each])])
-                        else:
-                            self.list_on_merge[key]['subtitle'].append(each)
+                    file = self.check_file(each)
+                    if file.get('format').get('nb_streams') == 1:
+                        file = file.get('streams')[0]
+                        if file.get('codec_type') == 'video':
+                            self.list_on_merge[key].update([('video', each)])
+                        if file.get('codec_type') == 'audio':
+                            self.list_on_merge[key].update([('audio', each)])
+                        if file.get('codec_type') == 'subtitle':
+                            if not self.list_on_merge[key].get('subtitle'):
+                                print(self.check_file(each))
+                                exit(0)
+                                self.list_on_merge[key].update([('subtitle', [each])])
+                            else:
+                                self.list_on_merge[key]['subtitle'].append(each)
+                    else:
+                        self.chek_streams(key, each, file)
 
     def replace_audio(self, video, audio):
         """
@@ -192,7 +194,26 @@ class Merge:
             )
             send2trash(self.list_on_merge[key]['video'])
 
-proj = Merge(search_path)
-answer = input('\n\tну шо, start?\n\t\t\t: ').strip()
-if answer == 'start':
-    proj.start()
+    def no(self):
+        pprint(self.list_on_merge)
+
+
+if __name__ == '__main__':
+    search_path = input(
+                "\nВведи путь.\nИли нажмите Enter чтобы искать в домашнем каталоге: "
+            ).strip()
+    if not search_path:
+        search_path = {
+            'Linux': '~/',
+            'Darwin': '~/',
+            'Windows': f'F:\\Videos\\anime'
+        }[platform.system()]
+    proj = Merge(search_path)
+    answer = input('\n\tну шо, start?\n\t\t\t: ').strip()
+    if answer == 'start':
+        proj.start()
+    if answer == 'no':
+        proj.no()
+else:
+    # proj = Merge('F:\\Videos\\anime\\[Leopard-Raws] Sakura Quest [HDTVRip] [720p]')
+    proj = Merge('F:\\Videos\\anime\\Acchi Kocchi')
