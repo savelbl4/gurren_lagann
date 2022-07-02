@@ -9,6 +9,7 @@ import mimetypes
 from send2trash import send2trash
 from pprint import pprint
 
+
 class Merge:
     def __init__(self, title_dir: str):
         self.home_dir = os.getcwd()
@@ -22,6 +23,7 @@ class Merge:
         self.build_hash()
         for key in self.list_on_merge:
             pattern = re.compile(key+'([\[\]A-Za-z0-9._\- ]+)')
+            # return pprint(self.list_on_merge)
             match = pattern.search(self.list_on_merge[key]['audio'])
             title = match.group(1).strip()
             print(f'{key}\t{title}')
@@ -101,6 +103,8 @@ class Merge:
         for stream in file.get('streams'):
             if stream.get('codec_type') == 'video':
                 self.list_on_merge[key].update([('video', each)])
+            if stream.get('codec_type') == 'audio' and 'rus' in stream.get('tags')['language']:
+                self.list_on_merge[key].update([('audio', each)])
                 # print(stream)
 
     def create_key(self):
@@ -130,6 +134,7 @@ class Merge:
                     file = self.check_file(each)
                     if file.get('format').get('nb_streams') == 1:
                         file = file.get('streams')[0]
+                        print(file.get('format').get('filename'))
                         if file.get('codec_type') == 'video':
                             self.list_on_merge[key].update([('video', each)])
                         if file.get('codec_type') == 'audio':
