@@ -30,15 +30,13 @@ class Merge:
 
     @staticmethod
     def change_dir(path):
-        """
-        переходим в дирректорию
+        """переходим в дирректорию
         """
         os.chdir(path)
 
     @staticmethod
     def change_spaces(src: str):
-        """
-        заменяем пробелы на подчёркивания
+        """заменяем пробелы на подчёркивания
         """
         dst = '_'.join(src.split(' '))
         os.rename(src, dst)
@@ -46,16 +44,14 @@ class Merge:
 
     @staticmethod
     def change_underline(src: str):
-        """
-        заменяем подчёркивания на пробелы
+        """заменяем подчёркивания на пробелы
         """
         dst = ' '.join(src.split('_'))
         os.rename(src, dst)
         return dst
 
     def create_tree(self, pth: str = '.'):
-        """
-        создаём дерево каталогов попутно заменяя пробелы
+        """создаём дерево каталогов попутно заменяя пробелы
         """
         if not pth in self.tree_of_dir:
             self.tree_of_dir.append(pth)
@@ -77,8 +73,7 @@ class Merge:
                     self.files.append('\\'.join([pth, each]))
 
     def check_file(self, file_name, num=None) -> dict:
-        """
-        получить данные из файле
+        """получить данные из файле
         """
         command_array = ['ffprobe',
                          '-v', 'quiet',
@@ -108,8 +103,7 @@ class Merge:
                 # print(stream)
 
     def create_key(self):
-        """
-        создаём ключи по названиям видео в корневом каталоге
+        """создаём ключи по названиям видео в корневом каталоге
         TODO: регулярка не идеальна
         """
         for each in self.files:
@@ -122,8 +116,7 @@ class Merge:
                         self.list_on_merge.update([(title, {})])
 
     def build_hash(self):
-        """
-        собрали значения ключей
+        """собрали значения ключей
         TODO: дорожек с озвучкой может быть несколько!
         """
         for key in self.list_on_merge.keys():
@@ -132,14 +125,15 @@ class Merge:
                 match = pattern.search(each)
                 if match:
                     file = self.check_file(each)
+                    # return print(json.dumps(file))
                     if file.get('format').get('nb_streams') == 1:
-                        file = file.get('streams')[0]
-                        print(file.get('format').get('filename'))
-                        if file.get('codec_type') == 'video':
+                        stream = file.get('streams')[0]
+                        # print(file.get('format').get('filename'))
+                        if stream.get('codec_type') == 'video':
                             self.list_on_merge[key].update([('video', each)])
-                        if file.get('codec_type') == 'audio':
+                        if stream.get('codec_type') == 'audio':
                             self.list_on_merge[key].update([('audio', each)])
-                        if file.get('codec_type') == 'subtitle':
+                        if stream.get('codec_type') == 'subtitle':
                             if not self.list_on_merge[key].get('subtitle'):
                                 print(self.check_file(each))
                                 exit(0)
@@ -150,15 +144,13 @@ class Merge:
                         self.chek_streams(key, each, file)
 
     def replace_audio(self, video, audio):
-        """
-        заменяет дорожку
+        """заменяет дорожку
         """
         merged = ''.join(['replaced_', video])
         subprocess.run(f'ffmpeg -i video.mp4 -i audio.wav -map 0:v -map 1:a -c:v copy -shortest output.mp4')
 
     def add_audio(self, video, audio):
-        """
-        добавляет дорожку
+        """добавляет дорожку
         """
         added = '\\added_'.join(video.split('\\'))
         command_array = ['ffmpeg',
@@ -189,8 +181,7 @@ class Merge:
         ffmpeg.concat(input_video, input_audio, v=1, a=1).output(new_name).run()
 
     def start(self):
-        """
-        погнали слиять
+        """погнали слиять
         """
         for key in self.list_on_merge.keys():
             self.add_audio(
